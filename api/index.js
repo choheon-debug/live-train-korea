@@ -13,6 +13,69 @@ const addMinutes = (date, minutes) => {
 // Helper to format date to ISO 8601
 const toISO = (date) => date.toISOString();
 
+// Mock Data Generators
+const generateTrains = (from, to) => {
+    const now = new Date();
+    const trains = [];
+    const trainTypes = ['KTX', 'ITX-새마을', '무궁화호', 'SRT'];
+
+    // Realistic durations (in minutes)
+    const DURATIONS = {
+        '서울-부산': 160, // ~2h 40m
+        '부산-서울': 160,
+        '서울-대전': 60,  // ~1h
+        '대전-서울': 60,
+        '서울-동대구': 110, // ~1h 50m
+        '동대구-서울': 110,
+        '수서-부산': 150, // SRT ~2h 30m
+        '부산-수서': 150
+    };
+
+    const key = `${from}-${to}`;
+    const baseDuration = DURATIONS[key] || 120 + Math.floor(Math.random() * 60); // Default 2-3h
+
+    // Operating Hours Logic
+    // If it's between 00:00 and 04:00, start trains from 05:00
+    let startTime = new Date(now);
+    const currentHour = now.getHours();
+
+    if (currentHour >= 0 && currentHour < 5) {
+        startTime.setHours(5, 0, 0, 0); // Set to 05:00 AM today
+    } else {
+        // Otherwise start from 10 mins later
+        startTime = addMinutes(now, 10);
+    }
+
+    // Generate 5-8 trains
+    const count = 5 + Math.floor(Math.random() * 4);
+
+    for (let i = 0; i < count; i++) {
+        // Interval: 30-60 mins
+        const departureTime = addMinutes(startTime, i * (30 + Math.floor(Math.random() * 30)));
+
+        // Randomize duration slightly (+- 5 mins)
+        const duration = baseDuration + Math.floor(Math.random() * 10) - 5;
+
+        const arrivalTime = addMinutes(departureTime, duration);
+        const delay = Math.random() > 0.8 ? Math.floor(Math.random() * 10) : 0; // 20% chance of delay
+
+        // Encode route info in ID: from|to|id
+        const encodedId = Buffer.from(`${from}|${to}|${100 + i}`).toString('base64');
+
+        trains.push({
+            trainId: encodedId,
+            trainName: trainTypes[Math.floor(Math.random() * trainTypes.length)],
+            trainNumber: `${100 + i}`,
+            departureTime: toISO(departureTime),
+            arrivalTime: toISO(addMinutes(arrivalTime, delay)),
+            delay: delay,
+            originStation: from,
+            destinationStation: to
+        });
+    }
+    return trains;
+};
+
 const generateTrainDetail = (trainId) => {
     const now = new Date();
     let from = '서울';
