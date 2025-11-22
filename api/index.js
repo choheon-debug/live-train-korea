@@ -12,7 +12,6 @@ const addMinutes = (date, minutes) => {
 
 // Helper to format date to ISO 8601
 const toISO = (date) => date.toISOString();
-};
 
 const generateTrainDetail = (trainId) => {
     const now = new Date();
