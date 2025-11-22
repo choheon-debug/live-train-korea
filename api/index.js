@@ -12,38 +12,6 @@ const addMinutes = (date, minutes) => {
 
 // Helper to format date to ISO 8601
 const toISO = (date) => date.toISOString();
-
-// Mock Data Generators
-const generateTrains = (from, to) => {
-    const now = new Date();
-    const trains = [];
-    const trainTypes = ['KTX', 'ITX-새마을', '무궁화호', 'SRT'];
-
-    // Generate 5-8 trains
-    const count = 5 + Math.floor(Math.random() * 4);
-
-    for (let i = 0; i < count; i++) {
-        const departureTime = addMinutes(now, 10 + i * 30 + Math.floor(Math.random() * 10));
-        const duration = 120 + Math.floor(Math.random() * 60); // 2-3 hours
-        const arrivalTime = addMinutes(departureTime, duration);
-        const delay = Math.random() > 0.7 ? Math.floor(Math.random() * 15) : 0; // 30% chance of delay
-
-        // Encode route info in ID: from|to|id
-        // Use Buffer for base64 encoding to be safe
-        const encodedId = Buffer.from(`${from}|${to}|${1000 + i}`).toString('base64');
-
-        trains.push({
-            trainId: encodedId,
-            trainName: trainTypes[Math.floor(Math.random() * trainTypes.length)],
-            trainNumber: `${100 + i}`,
-            departureTime: toISO(departureTime),
-            arrivalTime: toISO(addMinutes(arrivalTime, delay)), // Add delay to arrival
-            delay: delay,
-            originStation: from,
-            destinationStation: to
-        });
-    }
-    return trains;
 };
 
 const generateTrainDetail = (trainId) => {
