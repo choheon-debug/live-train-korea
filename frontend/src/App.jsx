@@ -1,10 +1,65 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import SearchForm from './components/SearchForm';
-            </header >
+import TrainList from './components/TrainList';
+import TrainDetail from './components/TrainDetail';
+import { fetchTrains } from './services/api';
+import { format, parseISO } from 'date-fns';
 
-    <SearchForm onSearch={handleSearch} isLoading={loading} />
+function App() {
+    const [trains, setTrains] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [lastUpdate, setLastUpdate] = useState(null);
+    const [selectedTrainId, setSelectedTrainId] = useState(null);
+    const [searchParams, setSearchParams] = useState({ from: '서울', to: '목포', trainNo: '' });
+    const [error, setError] = useState(null);
 
-{ error && <div className="card" style={{ color: 'var(--error-color)' }}>{error}</div> }
+    const loadTrains = useCallback(async (from, to, trainNo) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await fetchTrains(from, to, trainNo);
+            setTrains(data.trains);
+            setLastUpdate(data.lastUpdate);
+        } catch (err) {
+            setError('열차 정보를 불러오는 중 오류가 발생했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // Initial load
+    useEffect(() => {
+        loadTrains(searchParams.from, searchParams.to, searchParams.trainNo);
+    }, []);
+
+    // Polling
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            // Silent update (don't set loading state)
+            fetchTrains(searchParams.from, searchParams.to, searchParams.trainNo).then(data => {
+                setTrains(data.trains);
+                setLastUpdate(data.lastUpdate);
+            }).catch(console.error);
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(intervalId);
+    }, [searchParams]);
+
+    const handleSearch = (from, to, trainNo) => {
+        setSearchParams({ from, to, trainNo });
+        loadTrains(from, to, trainNo);
+    };
+
+    return (
+        <div className="container">
+            <header className="header">
+                <h1>Live Train Korea</h1>
+                <p style={{ color: 'var(--text-muted)' }}>실시간 열차 운행 정보</p>
+            </header>
+
+            <SearchForm onSearch={handleSearch} isLoading={loading} />
+
+            {error && <div className="card" style={{ color: 'var(--error-color)' }}>{error}</div>}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '0 4px' }}>
                 <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
@@ -19,15 +74,13 @@ import SearchForm from './components/SearchForm';
 
             <TrainList trains={trains} onSelectTrain={setSelectedTrainId} />
 
-{
-    selectedTrainId && (
-        <TrainDetail
-            trainId={selectedTrainId}
-            onClose={() => setSelectedTrainId(null)}
-        />
-    )
-}
-        </div >
+            {selectedTrainId && (
+                <TrainDetail
+                    trainId={selectedTrainId}
+                    onClose={() => setSelectedTrainId(null)}
+                />
+            )}
+        </div>
     );
 }
 
