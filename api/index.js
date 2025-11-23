@@ -10,6 +10,9 @@ const addMinutes = (date, minutes) => {
     return new Date(date.getTime() + minutes * 60000);
 };
 
+// Helper to format date to ISO 8601
+const toISO = (date) => date.toISOString();
+
 // Mock Data Generators
 const generateTrains = (from, to, trainNo) => {
     // 1. Handle Timezone (KST)
